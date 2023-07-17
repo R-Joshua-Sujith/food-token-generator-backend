@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const UserModel = require("./models/User");
 const TokenModel = require("./models/Token")
+const cron = require('node-cron');
+const axios = require('axios')
 
 dotenv.config();
 const app = express();
@@ -13,6 +15,36 @@ app.use(cors());
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("DB Connection successsful"))
     .catch((err) => console.log(err));
+
+
+
+app.get('/', (req, res) => {
+    res.send("Food Token Generator Backend")
+})
+
+app.get('/scheduled-api', (req, res) => {
+    // Make the API request to your endpoint
+    axios.get('https://food-token-generator-joshua-sujith.onrender.com/')
+        .then(response => {
+            console.log(response.data);
+            res.send('API request sent successfully');
+        })
+        .catch(error => {
+            console.error(error);
+            res.status(500).send('Failed to send API request');
+        });
+});
+
+cron.schedule('*/10 * * * *', () => {
+    axios.get('http://localhost:5000/scheduled-api')
+        .then(response => {
+            console.log(response.data);
+        })
+        .catch(error => {
+            console.error(error);
+        });
+});
+
 
 app.post("/create", async (req, res) => {
     const employeeId = req.body.employeeId;
@@ -34,9 +66,7 @@ app.post("/create", async (req, res) => {
     }
 })
 
-app.get('/', (req, res) => {
-    res.send("Food Token Generator Backend")
-})
+
 
 app.get('/getUsers', async (req, res) => {
     try {
